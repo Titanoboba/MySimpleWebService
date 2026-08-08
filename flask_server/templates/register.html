@@ -29,13 +29,24 @@
 	</p>
 
 	<p>
+		<label for="birthday">Your birthday date</label>
+		<input type="date" name="birthday" value ="{{ birthday or '' }}" required>
+	</p>
+
+	<p>
 	    <input type="submit">
 	</p>
 
     </form>
 
-	{% if message %}
-        <p id="error_message">{{ message }}</p>
+	{% if errors %}
+		<div style="color: red;">
+			<ul>
+				{% for error in errors %}
+					<li>{{ error }}</li>
+				{% endfor %}
+			</ul>
+		</div>
     {% endif %}
 
     <a href="/">Go back</a>

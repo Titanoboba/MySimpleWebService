@@ -2,6 +2,8 @@ from database import get_db
 from sqlalchemy import text
 from models import UserORM
 from faker import Faker
+from flask_server.flask_web_server import create_app
+import os
 
 def add_10_random_people():
     fake = Faker()
@@ -29,3 +31,6 @@ def print_db_data():
 
 if __name__ == '__main__':
     print_db_data()
+    app = create_app()
+    host = os.getenv('FLASK_HOST', '127.0.0.1')
+    app.run(host=host, port=5000)
