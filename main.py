@@ -30,7 +30,6 @@ def print_db_data():
             print(row)
 
 if __name__ == '__main__':
-    print_db_data()
     app = create_app()
     host = os.getenv('FLASK_HOST', '127.0.0.1')
-    app.run(host=host, port=5000)
+    app.run(host=host, port=5000, debug=True)
