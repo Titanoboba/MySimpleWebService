@@ -29,3 +29,4 @@ def print_db_data():
 
 if __name__ == '__main__':
     print_db_data()
+    #TODO Add flask registration web page and create FastAPI web page to see the db.
