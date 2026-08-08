@@ -5,6 +5,7 @@ mysqlinfo.txt
 
 __pycache__/
 *.pyc
+testfile not for github.py
 
 .idea/
 

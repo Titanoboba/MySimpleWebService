@@ -1,7 +1,8 @@
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
+from contextlib import contextmanager
 
 load_dotenv()
 DB_USER = os.getenv("DB_USER")
@@ -10,7 +11,7 @@ DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_NAME = os.getenv("DB_NAME")
 
 if not all([DB_USER, DB_PASSWORD, DB_NAME]):
-    raise ValueError("Одна или несколько переменных окружения (DB_USER, DB_PASSWORD, DB_NAME) не заданы!")
+    raise ValueError("DB_USER, DB_PASSWORD, DB_NAME must be set")
 
 DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 
@@ -24,13 +25,7 @@ try:
 except Exception as e:
     print(f"Error during connection {e}")
 
-class User(Base):
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    age = Column(Integer)
-
+@contextmanager
 def get_db():
     db = SessionLocal()
     try:
