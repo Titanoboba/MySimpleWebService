@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Landing page</title>
+</head>
+<body>
+
+    <p>Hello, user! You can register in our system using this link</p>
+
+    <a href = "{{ url_for('register') }}">Register</a>
+
+    <p>Or you can log in if you already have an account</p>
+
+    <a href = "{{ url_for('login') }}">Log in</a>
+
+</body>
+</html>

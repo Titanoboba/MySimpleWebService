@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+</head>
+<body>
+
+    <form action="" method="post">
+
+	<p>
+	    <label for="username">Username</label>
+	    <input type="text" name="username" value="{{ username or '' }}" required>
+	</p>
+
+	<p>
+	    <label for="password">Password</label>
+	    <input type="password" name="password" value="{{ password or '' }}" required>
+	</p>
+
+    <p>
+	    <label for="confirm_password">Confirm password</label>
+	    <input type="password" name="confirm_password" value="{{ confirm_password or '' }}" required>
+	</p>
+
+	<p>
+	    <label for="email">Email</label>
+	    <input type="email" name="email" value = "{{ email or '' }}" required>
+	</p>
+
+	<p>
+	    <input type="submit">
+	</p>
+
+    </form>
+
+	{% if message %}
+        <p id="error_message">{{ message }}</p>
+    {% endif %}
+
+    <a href="/">Go back</a>
+
+</body>
+<style>
+#error_message{
+	color:red
+}
+</style>
+</html>
