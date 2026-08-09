@@ -1,5 +1,6 @@
 from database import get_db
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from models import UserORM
 from faker import Faker
 from flask_server.flask_web_server import create_app
@@ -9,11 +10,14 @@ def add_10_random_people():
     fake = Faker()
     users = []
     for _ in range(10):
-        users.append({
-            'name': fake.first_name(),
-            'email': fake.email(),
-            'birthday_date': fake.date_of_birth(minimum_age=18, maximum_age=100)
-        })
+        try:
+            users.append({
+                'username': fake.first_name(),
+                'email': fake.email(),
+                'birthday_date': fake.date_of_birth(minimum_age=18, maximum_age=100)
+            })
+        except IntegrityError:
+            print("Could not add user")
 
     with get_db() as session:
         for data in users:

@@ -6,11 +6,12 @@ from schemas import UserRegistration
 from database import SessionLocal
 from services import create_user
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 import os
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='assets')
     app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
     @app.route('/')
@@ -20,26 +21,26 @@ def create_app():
     @app.route('/login/', methods=['post', 'get'])
     def login():
         if request.method == 'POST':
-            if request.args.get('registered'):
-                flash('Registration successful! Please log in.', 'success')
-
-            email = request.form.get('email')
+            username = request.form.get('username')
             password = request.form.get('password')
 
             with SessionLocal() as db:
-                user = db.query(UserORM).filter(UserORM.email == email).first()
+                user = db.query(UserORM).filter(
+                    or_(
+                        UserORM.username == username,
+                        UserORM.email == username)).first()
 
             if user is None:
-                flash('Invalid email or password', 'danger')
+                flash('Invalid username or password', 'danger')
                 return render_template('login.html')
 
             if not check_password_hash(user.password_hash, password):
-                flash('Invalid email or password', 'danger')
+                flash('Invalid username or password', 'danger')
                 return render_template('login.html')
 
-            session['email'] = user.email
+            session['username'] = user.username
             session['user_id'] = user.id
-            print(f"Got Login information, email: {email}, password: {password}")
+            print(f"Got Login information, {username}, password: {password}")
             return render_template('mainpage.html')
 
         return render_template('login.html')
@@ -56,7 +57,7 @@ def create_app():
             email = request.form.get('email', '').strip()
 
             form_data = {
-                'name': username,
+                'username': username,
                 'password': password,
                 'confirm_password': confirm_password,
                 'email': email,
@@ -73,14 +74,24 @@ def create_app():
                     new_user = create_user(db, reg_data)
 
                     print(
-                        f"Registered user! username: {reg_data.name}, password: {reg_data.password}, email: {reg_data.email}, "
+                        f"Registered user! username: {reg_data.username}, password: {reg_data.password}, email: {reg_data.email}, "
                         f"birthday: {reg_data.birthday_date}")
 
+                    flash('Registration successful! Please log in.', 'success')
                     return redirect(url_for('login', registered=True))
 
-            except IntegrityError:
-                errors.append("User with this email already exists.")
-                email = ''
+            except IntegrityError as e:
+                error_msg = str(e.orig) if e.orig else str(e)
+
+                if "Duplicate entry" in error_msg:
+                    if "key 'users.name'" in error_msg or "key 'name'" in error_msg:
+                        errors.append("Username already taken")
+                    elif "key 'users.email'" in error_msg or "key 'email'" in error_msg:
+                        errors.append("Email already registered")
+                    else:
+                        errors.append("User with this data already exists")
+                else:
+                    errors.append("Database error occurred")
 
             except ValidationError as e:
                 for error in e.errors():

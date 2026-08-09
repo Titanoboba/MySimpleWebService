@@ -5,7 +5,7 @@ class UserORM(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(45), nullable=False)
-    email = Column(String(45), nullable=False)
+    username = Column(String(45), nullable=False, unique=True)
+    email = Column(String(45), nullable=False, unique=True)
     birthday_date = Column(Date, nullable=False)
     password_hash = Column(String(128), nullable=False)

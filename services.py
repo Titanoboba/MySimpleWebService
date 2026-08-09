@@ -8,12 +8,15 @@ The purpose of this file is to perform some tasks for database. Function create_
 will take information from UserRegistration pydantic model and create ORM user with hashed password
 """
 
+def hash_password(password: str) -> str:
+    return generate_password_hash(password, method='pbkdf2:sha256')
+
 def create_user(db: Session, user_data: UserRegistration) -> UserORM:
-    hashed_password = generate_password_hash(user_data.password, method='pbkdf2:sha256')
+    hashed_password = hash_password(user_data.password)
 
     user_create = UserCreate(
         email=user_data.email,
-        name=user_data.name,
+        username=user_data.username,
         birthday_date=user_data.birthday_date,
     )
 
@@ -26,4 +29,3 @@ def create_user(db: Session, user_data: UserRegistration) -> UserORM:
     db.commit()
     db.refresh(new_user)
     return new_user
-

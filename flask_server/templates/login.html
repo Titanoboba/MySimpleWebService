@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+	<link rel="stylesheet" href="login_style.css">
 </head>
 <body>
 
@@ -14,19 +17,22 @@
 		{% endif %}
 	{% endwith %}
 
-    <form action="" method="post">
-        <p>
-	    <label for="email">Email</label>
-	    <input type="text" name="email">
-	</p>
-	<p>
-	    <label for="password">Password</label>
-	    <input type="password" name="password">
-	</p>
-	<p>
-	    <input type="submit">
-	</p>
-    </form>
+	<div class = "wrapper">
+		<form action="" method="post">
+			<p>
+			<label for="username">Username</label>
+			<input type="text" name="username" required>
+		</p>
+		<p>
+			<label for="password">Password</label>
+			<input type="password" name="password" required>
+		</p>
+		<p>
+			<input type="submit">
+		</p>
+		</form>
+	</div>
+
 
 	{% if message %}
         <p>{{ message }}</p>

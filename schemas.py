@@ -4,14 +4,14 @@ import re
 
 # This model is used to add user to database
 class UserCreate(BaseModel):
-    name: str = Field(..., min_length=1 , description="Name of user")
+    username: str = Field(..., min_length=1 , description="Name of user")
     email: str = Field(..., description="Email address of user")
     birthday_date: date
 
     # ORM connection
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator('name')
+    @field_validator('username')
     def check_name(cls, name: str) -> str:
         if not name.strip():
             raise ValueError("Name cannot be empty")
@@ -43,7 +43,7 @@ class UserCreate(BaseModel):
 
 # This model is used in flask web server to register new user
 class UserRegistration(BaseModel):
-    name: str = Field(..., min_length=1 , description="Name of user")
+    username: str = Field(..., min_length=1 , description="Name of user")
     email: str = Field(..., description="Email address of user")
     birthday_date: date
     password: str = Field(..., min_length=6, description="Password of user")
@@ -61,7 +61,7 @@ class UserRegistration(BaseModel):
             raise ValueError('Confirmation password does not match')
         return value
 
-    @field_validator('name')
+    @field_validator('username')
     def check_name(cls, name: str) -> str:
         if not name.strip():
             raise ValueError("Name cannot be empty")
