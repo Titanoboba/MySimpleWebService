@@ -11,7 +11,7 @@ import os
 
 
 def create_app():
-    app = Flask(__name__, static_folder='assets')
+    app = Flask(__name__, static_folder='static')
     app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
     @app.route('/')
@@ -55,6 +55,8 @@ def create_app():
             confirm_password = request.form.get('confirm_password', '').strip()
             birthday = request.form.get('birthday', '').strip()
             email = request.form.get('email', '').strip()
+
+            print(f"Got Login information, {username}, password: {password}, confirm_password: {confirm_password}, birthday: {birthday}, email: {email}")
 
             form_data = {
                 'username': username,
@@ -116,6 +118,7 @@ def create_app():
                         password = ''
 
             if errors:
+                print(f"Got errors: {errors}")
                 return render_template('register.html',
                                        errors=errors,
                                        username=username,

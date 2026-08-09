@@ -1,60 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/register_style.css') }}">
+	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
+
 <body>
 
-    <form action="" method="post">
+	<div class = "wrapper">
+		<form action="" method="post">
+		<h1>Register</h1>
 
-	<p>
-	    <label for="username">Username</label>
-	    <input type="text" name="username" value="{{ username or '' }}" required>
-	</p>
+		<p class = "input-box">
+			<input type="text" name="username" placeholder="Username" required>
+		</p>
 
-	<p>
-	    <label for="password">Password</label>
-	    <input type="password" name="password" value="{{ password or '' }}" required>
-	</p>
+		<p class = "input-box">
+			<input type="password" name="password" placeholder="Password" required>
+		</p>
 
-    <p>
-	    <label for="confirm_password">Confirm password</label>
-	    <input type="password" name="confirm_password" value="{{ confirm_password or '' }}" required>
-	</p>
+		<p class = "input-box">
+			<input type="password" name="confirm_password" placeholder="Confirm password" required>
+		</p>
 
-	<p>
-	    <label for="email">Email</label>
-	    <input type="email" name="email" value = "{{ email or '' }}" required>
-	</p>
+		<p class = "input-box">
+			<input type="email" name="email" placeholder="Email" required>
+		</p>
 
-	<p>
-		<label for="birthday">Your birthday date</label>
-		<input type="date" name="birthday" value ="{{ birthday or '' }}" required>
-	</p>
+		<label for="birthday">How old are you?</label>
+		<p class = "input-box">
+			<input type="text" id="birthday" name="birthday" placeholder="Choose birthday date" required>
+		</p>
 
-	<p>
-	    <input type="submit">
-	</p>
-
-    </form>
-
-	{% if errors %}
-		<div style="color: red;">
-			<ul>
-				{% for error in errors %}
-					<li>{{ error }}</li>
-				{% endfor %}
-			</ul>
+		<p>
+			<button type="submit" class = "btn">Register</button>
+		</p>
+		<div class="login-link">
+			<p>
+				Already have an account? <a href="/login/">Log in</a>
+			</p>
 		</div>
-    {% endif %}
+		</form>
+	</div>
 
-    <a href="/">Go back</a>
+
+	<div class="error_message">
+		{% if message %}
+			<p>{{ message }}</p>
+		{% endif %}
+	</div>
+
+	<div class="error_message">
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }}">{{ message }}</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+	</div>
 
 </body>
-<style>
-#error_message{
-	color:red
-}
-</style>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+flatpickr("#birthday", {
+    dateFormat: "d.m.Y",
+    locale: "en",
+    placeholder: "DD.MM.YYYY"
+});
+</script>
+
 </html>
