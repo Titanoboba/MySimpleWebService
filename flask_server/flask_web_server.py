@@ -100,7 +100,12 @@ def create_app():
 
                     if msg.startswith('Value error, '):
                         msg = msg[13:]
-                    errors.append(msg)
+
+                    if ((msg == "Confirmation password does not match")
+                        and not ("Password must be at least 6 characters" in errors)):
+                        errors.append(msg)
+                    elif msg != "Confirmation password does not match":
+                        errors.append(msg)
 
                     if field == 'email':
                         email = ''

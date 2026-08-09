@@ -46,7 +46,7 @@ class UserRegistration(BaseModel):
     username: str = Field(..., min_length=1 , description="Name of user")
     email: str = Field(..., description="Email address of user")
     birthday_date: date
-    password: str = Field(..., min_length=6, description="Password of user")
+    password: str = Field(..., description="Password of user")
     confirm_password: str = Field(..., description="Confirmation password of user")
 
     @field_validator('password')
