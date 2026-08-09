@@ -6,14 +6,18 @@
 </head>
 <body>
 
-    {% if message %}
-        <p>{{ message }}</p>
-    {% endif %}
+	{% with messages = get_flashed_messages(with_categories=true) %}
+		{% if messages %}
+			{% for category, message in messages %}
+				<div class="alert alert-{{ category }}">{{ message }}</div>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
 
     <form action="" method="post">
         <p>
-	    <label for="username">Username</label>
-	    <input type="text" name="username">
+	    <label for="email">Email</label>
+	    <input type="text" name="email">
 	</p>
 	<p>
 	    <label for="password">Password</label>
@@ -23,6 +27,10 @@
 	    <input type="submit">
 	</p>
     </form>
+
+	{% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
 
 	<a href="/">Go back</a>
 

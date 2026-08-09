@@ -1,10 +1,17 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for, flash, session
 from pydantic import ValidationError
+from werkzeug.security import check_password_hash
+from models import UserORM
 from schemas import UserRegistration
+from database import SessionLocal
+from services import create_user
+from sqlalchemy.exc import IntegrityError
+import os
 
 
 def create_app():
     app = Flask(__name__)
+    app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
     @app.route('/')
     def index():
@@ -12,13 +19,30 @@ def create_app():
 
     @app.route('/login/', methods=['post', 'get'])
     def login():
-        message = None
         if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            print(f"Got Login information, username: {username}, password: {password}")
+            if request.args.get('registered'):
+                flash('Registration successful! Please log in.', 'success')
 
-        return render_template('login.html', message=message)
+            email = request.form.get('email')
+            password = request.form.get('password')
+
+            with SessionLocal() as db:
+                user = db.query(UserORM).filter(UserORM.email == email).first()
+
+            if user is None:
+                flash('Invalid email or password', 'danger')
+                return render_template('login.html')
+
+            if not check_password_hash(user.password_hash, password):
+                flash('Invalid email or password', 'danger')
+                return render_template('login.html')
+
+            session['email'] = user.email
+            session['user_id'] = user.id
+            print(f"Got Login information, email: {email}, password: {password}")
+            return render_template('mainpage.html')
+
+        return render_template('login.html')
 
     @app.route('/register/', methods=['post', 'get'])
     def register():
@@ -41,11 +65,22 @@ def create_app():
 
             try:
                 # Everything is validated in UserRegistration model from pydantic
-                user = UserRegistration(**form_data)
-                # If we are here, then validation has been finished successfully
-                print(f"Registered user! username: {user.name}, password: {user.password}, email: {user.email}, "
-                      f"birthday: {user.birthday_date}")
-                return f"Registration successful! Please, log in."
+                reg_data = UserRegistration(**form_data)
+
+                with SessionLocal() as db:
+
+                    # Creating user in database
+                    new_user = create_user(db, reg_data)
+
+                    print(
+                        f"Registered user! username: {reg_data.name}, password: {reg_data.password}, email: {reg_data.email}, "
+                        f"birthday: {reg_data.birthday_date}")
+
+                    return redirect(url_for('login', registered=True))
+
+            except IntegrityError:
+                errors.append("User with this email already exists.")
+                email = ''
 
             except ValidationError as e:
                 for error in e.errors():
@@ -54,8 +89,6 @@ def create_app():
 
                     if msg.startswith('Value error, '):
                         msg = msg[13:]
-
-                    #errors.append(format_error(msg))
                     errors.append(msg)
 
                     if field == 'email':

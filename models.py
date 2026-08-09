@@ -8,3 +8,4 @@ class UserORM(Base):
     name = Column(String(45), nullable=False)
     email = Column(String(45), nullable=False)
     birthday_date = Column(Date, nullable=False)
+    password_hash = Column(String(128), nullable=False)
