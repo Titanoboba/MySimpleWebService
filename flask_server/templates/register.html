@@ -6,37 +6,91 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/register_style.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+	<link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 
 <body>
+
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }}">{{ message }}</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
 
 	<div class = "wrapper">
 		<form action="" method="post">
 		<h1>Register</h1>
 
-		<p class = "input-box">
-			<input type="text" name="username" placeholder="Username" required>
-		</p>
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="text" name="username" placeholder="Username" class="{{ 'input-error' if errors.get('username') else '' }}"
+			   value="{{ username or '' }}" required>
+			</p>
 
-		<p class = "input-box">
-			<input type="password" name="password" placeholder="Password" required>
-		</p>
+			{% if errors.get('username') %}
+				{% for error in errors['username'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
 
-		<p class = "input-box">
-			<input type="password" name="confirm_password" placeholder="Confirm password" required>
-		</p>
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="password" name="password" placeholder="Password" class="{{ 'input-error' if errors.get('password') else '' }}"
+			   value="{{ password or '' }}" required>
+			</p>
 
-		<p class = "input-box">
-			<input type="email" name="email" placeholder="Email" required>
-		</p>
+			{% if errors.get('password') %}
+				{% for error in errors['password'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
 
-		<label for="birthday">How old are you?</label>
-		<p class = "input-box">
-			<input type="text" id="birthday" name="birthday" placeholder="Choose birthday date" required>
-		</p>
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="password" name="confirm_password" placeholder="Confirm password" class="{{ 'input-error' if errors.get('confirm_password') else '' }}"
+			   value="{{ confirm_password or '' }}" required>
+			</p>
+
+
+			{% if errors.get('confirm_password') %}
+				{% for error in errors['confirm_password'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="text" name="email" placeholder="Email" class="{{ 'input-error' if errors.get('email') else '' }}"
+			   value="{{ email or '' }}" required>
+			</p>
+
+			{% if errors.get('email') %}
+				{% for error in errors['email'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="text" id="birthday" name="birthday" placeholder="Choose birthday date" class="{{ 'input-error' if errors.get('birthday_date') else '' }}"
+			   value="{{ birthday or '' }}"  required>
+			</p>
+
+			{% if errors.get('birthday_date') %}
+				{% for error in errors['birthday_date'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
 
 		<p>
 			<button type="submit" class = "btn">Register</button>
@@ -50,30 +104,17 @@
 	</div>
 
 
-	<div class="error_message">
-		{% if message %}
-			<p>{{ message }}</p>
-		{% endif %}
-	</div>
-
-	<div class="error_message">
-		{% with messages = get_flashed_messages(with_categories=true) %}
-			{% if messages %}
-				{% for category, message in messages %}
-					<div class="alert alert-{{ category }}">{{ message }}</div>
-				{% endfor %}
-			{% endif %}
-		{% endwith %}
-	</div>
+<!--		{% if message %}-->
+<!--			<p class="error_message">{{ message }}</p>-->
+<!--		{% endif %}-->
 
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 flatpickr("#birthday", {
-    dateFormat: "d.m.Y",
-    locale: "en",
-    placeholder: "DD.MM.YYYY"
+    dateFormat: "Y-m-d",
+    locale: "en"
 });
 </script>
 

@@ -78,8 +78,6 @@ class UserRegistration(BaseModel):
     @field_validator('birthday_date', mode='before')
     def check_birthday_date(cls, birthday_date) -> date:
 
-        birthday = date.today()
-
         if not birthday_date:
             raise ValueError("Birthday_date cannot be empty")
 

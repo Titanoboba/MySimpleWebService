@@ -33,6 +33,7 @@ def print_db_data():
         for row in rows:
             print(row)
 
+
 if __name__ == '__main__':
     app = create_app()
     host = os.getenv('FLASK_HOST', '127.0.0.1')

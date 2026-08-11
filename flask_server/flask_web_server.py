@@ -7,6 +7,7 @@ from database import SessionLocal
 from services import create_user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
+from collections import defaultdict
 import os
 
 
@@ -31,32 +32,28 @@ def create_app():
                         UserORM.email == username)).first()
 
             if user is None:
-                flash('Invalid username or password', 'danger')
-                return render_template('login.html')
+                return render_template('login.html', error='Invalid username or password')
 
             if not check_password_hash(user.password_hash, password):
-                flash('Invalid username or password', 'danger')
-                return render_template('login.html')
+                return render_template('login.html', error="Invalid username or password")
 
             session['username'] = user.username
             session['user_id'] = user.id
             print(f"Got Login information, {username}, password: {password}")
             return render_template('mainpage.html')
 
-        return render_template('login.html')
+        return render_template('login.html', error="")
 
     @app.route('/register/', methods=['post', 'get'])
     def register():
         username = email = password = confirm_password = birthday = ''
-        errors = []
+        field_errors = defaultdict(list)
         if request.method == 'POST':
             username = request.form.get('username', '').strip()
             password = request.form.get('password', '').strip()
             confirm_password = request.form.get('confirm_password', '').strip()
             birthday = request.form.get('birthday', '').strip()
             email = request.form.get('email', '').strip()
-
-            print(f"Got Login information, {username}, password: {password}, confirm_password: {confirm_password}, birthday: {birthday}, email: {email}")
 
             form_data = {
                 'username': username,
@@ -83,17 +80,15 @@ def create_app():
                     return redirect(url_for('login', registered=True))
 
             except IntegrityError as e:
+                db.rollback()
                 error_msg = str(e.orig) if e.orig else str(e)
+                print(error_msg)
 
                 if "Duplicate entry" in error_msg:
-                    if "key 'users.name'" in error_msg or "key 'name'" in error_msg:
-                        errors.append("Username already taken")
-                    elif "key 'users.email'" in error_msg or "key 'email'" in error_msg:
-                        errors.append("Email already registered")
-                    else:
-                        errors.append("User with this data already exists")
-                else:
-                    errors.append("Database error occurred")
+                    if "key 'users.name_UNIQUE'" in error_msg or "key 'name_UNIQUE'" in error_msg:
+                        field_errors["username"].append("Username already taken")
+                    elif "key 'users.email_UNIQUE'" in error_msg or "key 'email_UNIQUE'" in error_msg:
+                        field_errors["email"].append("Email already taken")
 
             except ValidationError as e:
                 for error in e.errors():
@@ -102,12 +97,7 @@ def create_app():
 
                     if msg.startswith('Value error, '):
                         msg = msg[13:]
-
-                    if ((msg == "Confirmation password does not match")
-                        and not ("Password must be at least 6 characters" in errors)):
-                        errors.append(msg)
-                    elif msg != "Confirmation password does not match":
-                        errors.append(msg)
+                    field_errors[field].append(msg)
 
                     if field == 'email':
                         email = ''
@@ -117,10 +107,9 @@ def create_app():
                         confirm_password = ''
                         password = ''
 
-            if errors:
-                print(f"Got errors: {errors}")
+            if field_errors:
                 return render_template('register.html',
-                                       errors=errors,
+                                       errors=field_errors,
                                        username=username,
                                        email=email,
                                        password=password,
@@ -128,7 +117,7 @@ def create_app():
                                        birthday=birthday)
 
         return render_template('register.html',
-                                errors=errors,
+                                errors={},
                                 username=username,
                                 email=email,
                                 password='',

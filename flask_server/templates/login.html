@@ -6,8 +6,9 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/login_style.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+	<link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 
 <body>
@@ -16,13 +17,20 @@
 		<form action="" method="post">
 		<h1>Login</h1>
 
-		<p class = "input-box">
-			<input type="text" name="username" placeholder="Username or email" required>
-			<i class='bx bxs-user-circle'></i>
-		</p>
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="text" name="username" placeholder="Username or email" class="{{ 'input-error' if error else '' }}" required>
+				<i class='bx bxs-user-circle'></i>
+			</p>
+
+			{% if error %}
+				<p class="field-error">{{ error }}</p>
+			{% endif %}
+		</div>
+
 
 		<p class = "input-box">
-			<input type="password" name="password" placeholder="Password" required>
+			<input type="password" name="password" placeholder="Password" class="{{ 'input-error' if error else '' }}" required>
 			<i class='bx bxs-lock' ></i>
 		</p>
 
@@ -47,21 +55,16 @@
 	</div>
 
 
-	<!-- <div class="error_message">
-		{% if message %}
-			<p>{{ message }}</p>
-		{% endif %}
-	</div>
-	
-	<div class="error_message">
-		{% with messages = get_flashed_messages(with_categories=true) %}
+	{% with messages = get_flashed_messages(with_categories=true) %}
+		<div class="flash_message">
 			{% if messages %}
 				{% for category, message in messages %}
 					<div class="alert alert-{{ category }}">{{ message }}</div>
 				{% endfor %}
 			{% endif %}
-		{% endwith %}
-	</div> -->
+		</div>
+	{% endwith %}
+
 
 </body>
 
