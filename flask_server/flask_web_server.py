@@ -82,7 +82,6 @@ def create_app():
             except IntegrityError as e:
                 db.rollback()
                 error_msg = str(e.orig) if e.orig else str(e)
-                print(error_msg)
 
                 if "Duplicate entry" in error_msg:
                     if "key 'users.name_UNIQUE'" in error_msg or "key 'name_UNIQUE'" in error_msg:
@@ -123,4 +122,5 @@ def create_app():
                                 password='',
                                 confirm_password='',
                                 birthday=birthday)
+
     return app
