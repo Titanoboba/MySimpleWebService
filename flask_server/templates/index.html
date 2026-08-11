@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Landing page</title>
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+	<link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
 
-    <p>Hello, user! You can register in our system using this link</p>
+    <div class = "wrapper">
+        <h3>Hello, user! You can register in our system using this link</h3>
 
-    <a href = "{{ url_for('register') }}">Register</a>
+        <a class = "btn" href = "{{ url_for('register') }}">Register</a>
 
-    <p>Or you can log in if you already have an account</p>
+        <h3>Or you can log in if you already have an account</h3>
 
-    <a href = "{{ url_for('login') }}">Log in</a>
+        <a class = "btn" href = "{{ url_for('login') }}">Log in</a>
+    </div>
 
 </body>
 </html>
