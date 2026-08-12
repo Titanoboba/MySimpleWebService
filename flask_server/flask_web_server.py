@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 from pydantic import ValidationError
 from werkzeug.security import check_password_hash
@@ -14,16 +16,31 @@ import os
 def create_app():
     app = Flask(__name__, static_folder='static')
     app.secret_key = os.getenv('FLASK_SECRET_KEY')
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
     @app.route('/')
     def index():
         return render_template('index.html')
 
+    @app.route('/logout/')
+    def logout():
+        session.clear()
+        return redirect(url_for('index'))
+
+    @app.route('/main/', methods=['GET', 'POST'])
+    def mainpage():
+        return render_template('mainpage.html')
+
     @app.route('/login/', methods=['post', 'get'])
     def login():
+
+        if session:
+            return redirect(url_for('mainpage'))
+
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
+            remember = request.form.get('remember')
 
             with SessionLocal() as db:
                 user = db.query(UserORM).filter(
@@ -39,8 +56,12 @@ def create_app():
 
             session['username'] = user.username
             session['user_id'] = user.id
-            print(f"Got Login information, {username}, password: {password}")
-            return render_template('mainpage.html')
+
+            if remember:
+                session.permanent = True
+
+            print(f"Got Login information, {username}, password: {password}, remember: {remember}")
+            return redirect(url_for('mainpage', registered=True))
 
         return render_template('login.html', error="")
 
@@ -76,7 +97,6 @@ def create_app():
                         f"Registered user! username: {reg_data.username}, password: {reg_data.password}, email: {reg_data.email}, "
                         f"birthday: {reg_data.birthday_date}")
 
-                    flash('Registration successful! Please log in.', 'success')
                     return redirect(url_for('login', registered=True))
 
             except IntegrityError as e:

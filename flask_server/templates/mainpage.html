@@ -2,17 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Logged in page</title>
+    <title>Mainpage</title>
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
 
-    <h1> placeholder for page after logging in </h1>
-
-    <img src="{{ url_for('static', filename='images/cat.jpg') }}" alt="cat picture">
-
+    {% if session.username %}
+        <h1>Welcome, {{ session.username }}!</h1>
+        <p>You are logged in.</p>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    {% else %}
+        <h1>Welcome, guest!</h1>
+        <p>
+            Please <a href="{{ url_for('login') }}">login</a> or
+            <a href="{{ url_for('register') }}">register</a>.
+        </p>
+    {% endif %}
     <br>
-
+    <img src="{{ url_for('static', filename='images/cat.jpg') }}" alt="cat picture">
+    <br>
     <a href="/">Go back</a>
 
 </body>
