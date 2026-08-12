@@ -159,33 +159,32 @@ def create_app():
 
         reset = request.args.get('reset', 'false').lower() == 'true'
 
-        print(reset)
-
         if request.method == 'POST':
 
             if reset:
 
                 email = request.form.get('email')
                 if email: email = email.strip()
+                else: return render_template('login.html', error = "Please enter your email address.", reset=True)
 
                 with SessionLocal() as db:
                     user = db.query(UserORM).filter_by(email=email).first()
                     if user:
+                        from werkzeug.security import generate_password_hash
+
                         flash('Your password has been reset to 123456. Please change your password.', 'info')
                         new_user_data = {
                             'username': user.username,
-                            'password': '123456',
-                            'confirm_password': '123456',
+                            'password_hash': generate_password_hash('123456', method='pbkdf2:sha256'),
                             'email': email,
                             'birthday_date': user.birthday_date
                         }
 
-                        user = update_user(db, UserRegistration(**new_user_data), user.id)
+                        user = update_user(db, new_user_data, user.id)
 
                         return redirect(url_for('login'))
-
-                if not email:
-                    return render_template('login.html', error = "Please enter your email address.", reset=True)
+                    else:
+                        return render_template('login.html', error="There is no user with this email.", reset=True)
 
             username = request.form.get('username')
             password = request.form.get('password')
