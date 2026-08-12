@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit profile</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+	<link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+</head>
+
+<body>
+
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category, message in messages %}
+					<div class="alert alert-{{ category }}">{{ message }}</div>
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+
+	<div class = "wrapper">
+		<form action="{{ url_for('profile', update='true') }}" method="post">
+<!--		<input type="hidden" name="update" value="true">-->
+		<h1>Edit profile for {{ session.username }} </h1>
+
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="text" name="username" placeholder="Username" class="{{ 'input-error' if errors.get('username') else '' }}"
+			   value="{{ username or '' }}">
+			</p>
+
+			{% if errors.get('username') %}
+				{% for error in errors['username'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="password" name="prev_password" placeholder="Previous password" class="{{ 'input-error' if errors.get('prev_password') else '' }}">
+			</p>
+
+			{% if errors.get('prev_password') %}
+				{% for error in errors['prev_password'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="password" name="password" placeholder="New password" class="{{ 'input-error' if errors.get('password') else '' }}">
+			</p>
+
+			{% if errors.get('password') %}
+				{% for error in errors['password'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="password" name="confirm_password" placeholder="Confirm password" class="{{ 'input-error' if errors.get('confirm_password') else '' }}">
+			</p>
+
+
+			{% if errors.get('confirm_password') %}
+				{% for error in errors['confirm_password'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+
+		<div class = "input-group">
+			<p class = "input-box">
+				<input type="text" name="email" placeholder="Email" class="{{ 'input-error' if errors.get('email') else '' }}"
+			   value="{{ email or '' }}">
+			</p>
+
+			{% if errors.get('email') %}
+				{% for error in errors['email'] %}
+					<p class="field-error">{{ error }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+
+		<p>
+			<button type="submit" class = "btn">Edit information</button>
+		</p>
+		</form>
+	</div>
+
+</body>
+
+</html>

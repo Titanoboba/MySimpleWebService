@@ -1,10 +1,9 @@
 from datetime import timedelta
-
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 from pydantic import ValidationError
 from werkzeug.security import check_password_hash
 from models import UserORM
-from schemas import UserRegistration
+from schemas import UserRegistration, UserUpdate
 from database import SessionLocal
 from services import add_user, update_user
 from sqlalchemy.exc import IntegrityError
@@ -31,40 +30,126 @@ def create_app():
     def mainpage():
         return render_template('mainpage.html')
 
-    @app.route('/profile/edit/', methods=['GET', 'POST'])
-    def profile_edit():
+    @app.route('/profile/', methods=['GET', 'POST'])
+    def profile():
+
+        field_errors = defaultdict(list)
+
         if 'user_id' not in session:
             flash('You must be logged in.', 'warning')
             return redirect(url_for('login'))
 
+        update = request.args.get('update', 'false').lower() == 'true'
         user_id = session['user_id']
         with SessionLocal() as db:
-            user = db.query(UserORM).filetr(UserORM.id == user_id).first()
+            user = db.query(UserORM).filter(UserORM.id == user_id).first()
 
-            if not user:
-                flash('User not found', 'danger')
-                return redirect(url_for('logout'))
+            if update:
+                if not user:
+                    flash('User not found', 'danger')
+                    return redirect(url_for('logout'))
 
-            if request.method == 'POST':
-                new_data = UserRegistration(
-                    username=request.form.get('username'),
-                    email=request.form.get('email'),
-                    birthday_date=request.form.get('birthday'),
-                    password=request.form.get('password'),
-                    confirm_password=request.form.get('confirm_password')
-                )
-                try:
-                    updated_user = update_user(db, new_data, user.id)
-                    flash('Profile updated successfully.', 'success')
-                    return redirect(url_for('mainpage'))
+                if request.method == 'POST':
+                    form_data = {
+                        'username': request.form.get('username'),
+                        'email': request.form.get('email'),
+                        'prev_password': request.form.get('prev_password'),
+                        'password': request.form.get('password'),
+                        'confirm_password': request.form.get('confirm_password')
+                    }
 
-                except ValueError as e:
-                    flash(str(e), 'danger')
+                    if form_data['username'] != user.username:
+                        username = db.query(UserORM).filter(UserORM.username == form_data['username']).first()
+                        if username:
+                            field_errors['username'].append("Username already taken")
 
-                except Exception as e:
-                    flash('An error occurred.', 'danger')
+                    if form_data['email'] != user.email:
+                        email = db.query(UserORM).filter(UserORM.email == form_data['email']).first()
+                        if email:
+                            field_errors['email'].append("Email already taken")
 
-            return render_template('edit_profile.html', user=user)
+                    try:
+
+                        update_data = UserUpdate(**form_data)
+
+                        if update_data.password:
+                            if not update_data.prev_password:
+                                field_errors['prev_password'].append("Previous password is required")
+                                return render_template('edit_profile.html',
+                                                       user=user,
+                                                       update=update,
+                                                       errors=field_errors,
+                                                       username=form_data['username'],
+                                                       email=form_data['email'])
+                            elif not check_password_hash(user.password_hash, update_data.prev_password):
+                                field_errors['prev_password'].append("Invalid previous password")
+                                return render_template('edit_profile.html',
+                                                       user=user,
+                                                       update=update,
+                                                       errors=field_errors,
+                                                       username=form_data['username'],
+                                                       email=form_data['email'])
+                            elif len(update_data.password) < 6:
+                                field_errors['password'].append("Password must be at least 6 characters")
+                                return render_template('edit_profile.html',
+                                                       user=user,
+                                                       update=update,
+                                                       errors=field_errors,
+                                                       username=form_data['username'],
+                                                       email=form_data['email'])
+                            elif update_data.password != update_data.confirm_password:
+                                field_errors['confirm_password'].append("Passwords do not match")
+                                return render_template('edit_profile.html',
+                                                       user=user,
+                                                       update=update,
+                                                       errors=field_errors,
+                                                       username=form_data['username'],
+                                                       email=form_data['email'])
+
+                        else:
+                            update_data.password = None
+                            update_data.confirm_password = None
+                            update_data.prev_password = None
+
+                        update_dict = {
+                            key: value for key, value in update_data.model_dump(exclude={'prev_password', 'confirm_passwrod'}).items()
+                            if value is not None
+                        }
+
+                        if 'password' in update_dict:
+                            from werkzeug.security import generate_password_hash
+                            update_dict['password_hash'] = generate_password_hash(update_dict['password'], method='pbkdf2:sha256')
+
+                        updated_user = update_user(db, update_dict, user.id)
+
+                        if 'username' in update_dict:
+                            session['username'] = updated_user.username
+
+                        flash('Profile updated successfully.', 'success')
+                        return redirect(url_for('mainpage'))
+
+                    except ValidationError as e:
+                        for error in e.errors():
+                            field = error['loc'][0] if error['loc'] else ''
+                            msg = error['msg']
+
+                            if msg.startswith('Value error, '):
+                                msg = msg[13:]
+                            field_errors[field].append(msg)
+
+                    return render_template('edit_profile.html',
+                                           user=user,
+                                           update=update,
+                                           errors=field_errors,
+                                           username=form_data['username'],
+                                           email=form_data['email'])
+
+        return render_template('edit_profile.html',
+                               user=user,
+                               update=update,
+                               errors=field_errors,
+                               username=user.username,
+                               email=user.email)
 
     @app.route('/login/', methods=['GET', 'POST'])
     def login():

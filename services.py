@@ -36,19 +36,14 @@ def add_user(db: Session, user_data: UserRegistration) -> UserORM:
     db.refresh(new_user)
     return new_user
 
-def update_user(db: Session, new_user_data: UserRegistration, user_id: int) -> UserORM:
+def update_user(db: Session, update_dict: dict, user_id: int) -> UserORM:
     user = db.query(UserORM).filter(UserORM.id == user_id).first()
     if not user:
         raise ValueError("User not found")
 
-    update_data = new_user_data.model_dump(exclude_unset = True)
-
-    if 'password' in update_data:
-        update_data['password_hash'] = hash_password(update_data.pop('password'))
-        update_data.pop('confirm_password', None)
-
-    for key, value in update_data.items():
-        setattr(user, key, value)
+    for key, value in update_dict.items():
+        if hasattr(user, key):
+            setattr(user, key, value)
 
     db.commit()
     db.refresh(user)

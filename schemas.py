@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict, ValidationInfo
 from datetime import date, datetime
+from typing import Optional
 import re
 
 # This model is used to add user to database
@@ -102,6 +103,41 @@ class UserRegistration(BaseModel):
             raise ValueError("Age cannot exceed 100 years.")
 
         return birthday_date
+
+# This model is used in flask web server to update existing user
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    birthday_date: Optional[date] = None
+    prev_password: Optional[str] = None
+    password: Optional[str] = None
+    confirm_password: Optional[str] = None
+
+    @field_validator('username')
+    def validate_username(cls, value: str) -> str:
+        if value is not None and not value.strip():
+            raise ValueError('Username cannot be empty')
+        return value.strip() if value else None
+
+    @field_validator('email')
+    def validate_email(cls, value: str) -> str:
+        if value is not None and not value.strip():
+            raise ValueError('Email cannot be empty')
+        if not is_valid_email(value):
+            raise ValueError('Invalid email')
+        return value.strip() if value else None
+
+    @field_validator('prev_password', mode='after')
+    def validate_prev_password(cls, value, info: ValidationInfo):
+        if info.data.get('password') and not value:
+            raise ValueError('Previous password is required')
+        return value
+
+    @field_validator('confirm_password', mode='after')
+    def validate_confirm_password(cls, value, info: ValidationInfo):
+        if info.data.get('password') and value != info.data.get('password'):
+            raise ValueError('Passwords do not match')
+        return value
 
 def calculate_age(birth_date):
     today = date.today()
