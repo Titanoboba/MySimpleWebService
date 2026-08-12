@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>{% if reset %}Reset Password{% else %}Login{% endif %}</title>
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 	<link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
@@ -14,56 +14,82 @@
 <body>
 
 	<div class = "wrapper">
-		<form action="" method="post">
-		<h1>Login</h1>
+		{% if reset %}
+            <h1>Reset Password</h1>
+            <form action="{{ url_for('login', reset='true') }}" method="post">
 
-		<div class = "input-group">
+				<div class = "input-group">
+					<div class="input-box">
+						<input type="email" name="email" placeholder="Enter your email" required>
+                	</div>
+
+					{% with messages = get_flashed_messages(with_categories=true) %}
+						<div class="flash_message">
+							{% if messages %}
+								{% for category, message in messages %}
+									<div class="alert-{{ category }}">{{ message }}</div>
+								{% endfor %}
+							{% endif %}
+						</div>
+					{% endwith %}
+				</div>
+
+                <button type="submit" class="btn">Reset password</button>
+            </form>
+            <div class="register-link">
+                <p><a href="{{ url_for('login') }}">Back to login</a></p>
+            </div>
+        {% else %}
+			<form action="" method="post">
+			<h1>Login</h1>
+
+			{% with messages = get_flashed_messages(with_categories=true) %}
+				<div class="flash_message">
+					{% if messages %}
+						{% for category, message in messages %}
+							<div class="alert-{{ category }}">{{ message }}</div>
+						{% endfor %}
+					{% endif %}
+				</div>
+			{% endwith %}
+
+			<div class = "input-group">
+				<p class = "input-box">
+					<input type="text" name="username" placeholder="Username or email" class="{{ 'input-error' if error else '' }}" required>
+					<i class='bx bxs-user-circle'></i>
+				</p>
+
+				{% if error %}
+					<p class="field-error">{{ error }}</p>
+				{% endif %}
+			</div>
+
+
 			<p class = "input-box">
-				<input type="text" name="username" placeholder="Username or email" class="{{ 'input-error' if error else '' }}" required>
-				<i class='bx bxs-user-circle'></i>
+				<input type="password" name="password" placeholder="Password" class="{{ 'input-error' if error else '' }}" required>
+				<i class='bx bxs-lock' ></i>
 			</p>
 
-			{% if error %}
-				<p class="field-error">{{ error }}</p>
-			{% endif %}
-		</div>
+			<div class="remember-forgot">
+				<label>
+					<input type="checkbox" name="remember"> Remember me
+				</label>
+				<a href="{{ url_for('login', reset='true') }}">Forgot password?</a>
+			</div>
 
-
-		<p class = "input-box">
-			<input type="password" name="password" placeholder="Password" class="{{ 'input-error' if error else '' }}" required>
-			<i class='bx bxs-lock' ></i>
-		</p>
-
-		<div class="remember-forgot">
-			<label>
-				<input type="checkbox" name="remember"> Remember me
-			</label>
-			<a href="#">Forgot password?</a>
-		</div>
-
-		<p>
-			<button type="submit" class = "btn">Login</button>
-		</p>
-
-		<div class="register-link">
 			<p>
-				Don't have an account? <a href="/register/">Register</a>
+				<button type="submit" class = "btn">Login</button>
 			</p>
-		</div>
+
+			<div class="register-link">
+				<p>
+					Don't have an account? <a href="{{ url_for('register') }}">Register</a>
+				</p>
+			</div>
+		{% endif %}
 
 		</form>
 	</div>
-
-
-	{% with messages = get_flashed_messages(with_categories=true) %}
-		<div class="flash_message">
-			{% if messages %}
-				{% for category, message in messages %}
-					<div class="alert alert-{{ category }}">{{ message }}</div>
-				{% endfor %}
-			{% endif %}
-		</div>
-	{% endwith %}
 
 
 </body>

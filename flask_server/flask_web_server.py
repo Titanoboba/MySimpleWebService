@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash
 from models import UserORM
 from schemas import UserRegistration
 from database import SessionLocal
-from services import create_user
+from services import add_user, update_user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from collections import defaultdict
@@ -31,13 +31,77 @@ def create_app():
     def mainpage():
         return render_template('mainpage.html')
 
-    @app.route('/login/', methods=['post', 'get'])
+    @app.route('/profile/edit/', methods=['GET', 'POST'])
+    def profile_edit():
+        if 'user_id' not in session:
+            flash('You must be logged in.', 'warning')
+            return redirect(url_for('login'))
+
+        user_id = session['user_id']
+        with SessionLocal() as db:
+            user = db.query(UserORM).filetr(UserORM.id == user_id).first()
+
+            if not user:
+                flash('User not found', 'danger')
+                return redirect(url_for('logout'))
+
+            if request.method == 'POST':
+                new_data = UserRegistration(
+                    username=request.form.get('username'),
+                    email=request.form.get('email'),
+                    birthday_date=request.form.get('birthday'),
+                    password=request.form.get('password'),
+                    confirm_password=request.form.get('confirm_password')
+                )
+                try:
+                    updated_user = update_user(db, new_data, user.id)
+                    flash('Profile updated successfully.', 'success')
+                    return redirect(url_for('mainpage'))
+
+                except ValueError as e:
+                    flash(str(e), 'danger')
+
+                except Exception as e:
+                    flash('An error occurred.', 'danger')
+
+            return render_template('edit_profile.html', user=user)
+
+    @app.route('/login/', methods=['GET', 'POST'])
     def login():
 
-        if session:
+        if 'user_id' in session:
             return redirect(url_for('mainpage'))
 
+        reset = request.args.get('reset', 'false').lower() == 'true'
+
+        print(reset)
+
         if request.method == 'POST':
+
+            if reset:
+
+                email = request.form.get('email')
+                if email: email = email.strip()
+
+                with SessionLocal() as db:
+                    user = db.query(UserORM).filter_by(email=email).first()
+                    if user:
+                        flash('Your password has been reset to 123456. Please change your password.', 'info')
+                        new_user_data = {
+                            'username': user.username,
+                            'password': '123456',
+                            'confirm_password': '123456',
+                            'email': email,
+                            'birthday_date': user.birthday_date
+                        }
+
+                        user = update_user(db, UserRegistration(**new_user_data), user.id)
+
+                        return redirect(url_for('login'))
+
+                if not email:
+                    return render_template('login.html', error = "Please enter your email address.", reset=True)
+
             username = request.form.get('username')
             password = request.form.get('password')
             remember = request.form.get('remember')
@@ -49,10 +113,10 @@ def create_app():
                         UserORM.email == username)).first()
 
             if user is None:
-                return render_template('login.html', error='Invalid username or password')
+                return render_template('login.html', error='Invalid username or password', reset=reset)
 
             if not check_password_hash(user.password_hash, password):
-                return render_template('login.html', error="Invalid username or password")
+                return render_template('login.html', error="Invalid username or password", reset=reset)
 
             session['username'] = user.username
             session['user_id'] = user.id
@@ -63,7 +127,7 @@ def create_app():
             print(f"Got Login information, {username}, password: {password}, remember: {remember}")
             return redirect(url_for('mainpage', registered=True))
 
-        return render_template('login.html', error="")
+        return render_template('login.html', error="", reset=reset)
 
     @app.route('/register/', methods=['post', 'get'])
     def register():
@@ -81,7 +145,7 @@ def create_app():
                 'password': password,
                 'confirm_password': confirm_password,
                 'email': email,
-                'birthday_date': birthday,
+                'birthday_date': birthday
             }
 
             try:
@@ -89,9 +153,8 @@ def create_app():
                 reg_data = UserRegistration(**form_data)
 
                 with SessionLocal() as db:
-
                     # Creating user in database
-                    new_user = create_user(db, reg_data)
+                    new_user = add_user(db, reg_data)
 
                     print(
                         f"Registered user! username: {reg_data.username}, password: {reg_data.password}, email: {reg_data.email}, "

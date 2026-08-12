@@ -98,6 +98,12 @@ h3{
     margin-bottom: 30px;
 }
 
+.input-group .alert-info{
+    color: #F5CC14;
+    position: absolute;
+    top: 110%;
+}
+
 .input-group .field-error {
     color: #ff6b6b;
     position: absolute;
