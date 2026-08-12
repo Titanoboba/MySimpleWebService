@@ -59,13 +59,13 @@ def create_app():
                     }
 
                     if form_data['username'] != user.username:
-                        username = db.query(UserORM).filter(UserORM.username == form_data['username']).first()
-                        if username:
+                        existing = db.query(UserORM).filter(UserORM.username == form_data['username']).first()
+                        if existing:
                             field_errors['username'].append("Username already taken")
 
                     if form_data['email'] != user.email:
-                        email = db.query(UserORM).filter(UserORM.email == form_data['email']).first()
-                        if email:
+                        existing = db.query(UserORM).filter(UserORM.email == form_data['email']).first()
+                        if existing:
                             field_errors['email'].append("Email already taken")
 
                     try:
@@ -75,58 +75,38 @@ def create_app():
                         if update_data.password:
                             if not update_data.prev_password:
                                 field_errors['prev_password'].append("Previous password is required")
-                                return render_template('edit_profile.html',
-                                                       user=user,
-                                                       update=update,
-                                                       errors=field_errors,
-                                                       username=form_data['username'],
-                                                       email=form_data['email'])
+
                             elif not check_password_hash(user.password_hash, update_data.prev_password):
                                 field_errors['prev_password'].append("Invalid previous password")
-                                return render_template('edit_profile.html',
-                                                       user=user,
-                                                       update=update,
-                                                       errors=field_errors,
-                                                       username=form_data['username'],
-                                                       email=form_data['email'])
+
                             elif len(update_data.password) < 6:
                                 field_errors['password'].append("Password must be at least 6 characters")
-                                return render_template('edit_profile.html',
-                                                       user=user,
-                                                       update=update,
-                                                       errors=field_errors,
-                                                       username=form_data['username'],
-                                                       email=form_data['email'])
+
                             elif update_data.password != update_data.confirm_password:
                                 field_errors['confirm_password'].append("Passwords do not match")
-                                return render_template('edit_profile.html',
-                                                       user=user,
-                                                       update=update,
-                                                       errors=field_errors,
-                                                       username=form_data['username'],
-                                                       email=form_data['email'])
 
                         else:
                             update_data.password = None
                             update_data.confirm_password = None
                             update_data.prev_password = None
 
-                        update_dict = {
-                            key: value for key, value in update_data.model_dump(exclude={'prev_password', 'confirm_passwrod'}).items()
-                            if value is not None
-                        }
+                        if not field_errors:
+                            update_dict = {
+                                key: value for key, value in update_data.model_dump(exclude={'prev_password', 'confirm_passwrod'}).items()
+                                if value is not None
+                            }
 
-                        if 'password' in update_dict:
-                            from werkzeug.security import generate_password_hash
-                            update_dict['password_hash'] = generate_password_hash(update_dict['password'], method='pbkdf2:sha256')
+                            if 'password' in update_dict:
+                                from werkzeug.security import generate_password_hash
+                                update_dict['password_hash'] = generate_password_hash(update_dict['password'], method='pbkdf2:sha256')
 
-                        updated_user = update_user(db, update_dict, user.id)
+                            updated_user = update_user(db, update_dict, user.id)
 
-                        if 'username' in update_dict:
-                            session['username'] = updated_user.username
+                            if 'username' in update_dict:
+                                session['username'] = updated_user.username
 
-                        flash('Profile updated successfully.', 'success')
-                        return redirect(url_for('mainpage'))
+                            flash('Profile updated successfully.', 'success')
+                            return redirect(url_for('mainpage'))
 
                     except ValidationError as e:
                         for error in e.errors():
