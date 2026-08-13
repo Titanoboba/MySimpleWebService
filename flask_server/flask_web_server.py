@@ -1,8 +1,8 @@
-from datetime import timedelta
-from flask import Flask, request, render_template, redirect, url_for, flash, session
+from datetime import timedelta, datetime
+from flask import Flask, request, render_template, redirect, url_for, flash, session, jsonify
 from pydantic import ValidationError
 from werkzeug.security import check_password_hash
-from models import UserORM
+from models import UserORM, TaskORM, TaskStatus
 from schemas import UserRegistration, UserUpdate
 from database import SessionLocal
 from services import add_user, update_user
@@ -25,6 +25,89 @@ def create_app():
     def logout():
         session.clear()
         return redirect(url_for('index'))
+
+    @app.route('/api/tasks', methods=['POST'])
+    def create_task():
+        if 'user_id' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+        data = request.get_json()
+        title = data.get('title', '').strip()
+        if not title:
+            return jsonify({'error': 'Title is required'}), 400
+
+        user_id = session['user_id']
+        try:
+            with SessionLocal() as db:
+                task = TaskORM(title=title, user_id=user_id, status = TaskStatus.todo)
+                db.add(task)
+                db.commit()
+                db.refresh(task)
+                return jsonify({
+                    'id': task.id,
+                    'title': task.title,
+                    'status': task.status.value if hasattr(task.status, 'value') else task.status,
+                    'created_at': task.created_at.isoformat()
+                }), 201
+        except Exception as e:
+            db.rollback()
+            print(f"Error creating task: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/tasks/<int:task_id>', methods=['PATCH'])
+    def update_task(task_id):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Unathorized'}), 401
+
+        data = request.get_json()
+        new_status = data.get('status')
+
+        if new_status not in ['todo', 'in_progress', 'done']:
+            return jsonify({'error': 'Invalid status'}), 400
+
+        user_id = session['user_id']
+        with SessionLocal() as db:
+            task = db.query(TaskORM).filter(TaskORM.id == task_id, TaskORM.user_id == user_id).first()
+
+            if task is None:
+                return jsonify({'error': 'Task not found'}), 404
+
+            task.status = TaskStatus(new_status)
+            task.updated_at = datetime.utcnow()
+            db.commit()
+            return jsonify({'message': 'Status updated'}), 200
+
+    @app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
+    def delete_task(task_id):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Unathorized'}), 401
+
+        user_id = session['user_id']
+        with SessionLocal() as db:
+            task = db.query(TaskORM).filter(TaskORM.id == task_id, TaskORM.user_id == user_id).first()
+
+            if not task:
+                return jsonify({'error': 'Task not found'}), 404
+
+            db.delete(task)
+            db.commit()
+            return jsonify({'message': 'Task deleted'}), 200
+
+    @app.route('/api/tasks', methods=['GET'])
+    def get_tasks():
+        if 'user_id' not in session:
+            return jsonify([]), 401
+        user_id = session['user_id']
+        with SessionLocal() as db:
+            tasks = db.query(TaskORM).filter(TaskORM.user_id == user_id).order_by(TaskORM.created_at).all()
+            result = []
+            for task in tasks:
+                result.append({
+                    'id': task.id,
+                    'title': task.title,
+                    'status': task.status.value if hasattr(task.status, 'value') else task.status,
+                    'created_at': task.created_at.isoformat() if task.created_at else None
+                })
+            return jsonify(result)
 
     @app.route('/main/', methods=['GET', 'POST'])
     def mainpage():
