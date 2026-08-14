@@ -2,6 +2,7 @@ from datetime import timedelta, datetime
 from flask import Flask, request, render_template, redirect, url_for, flash, session, jsonify
 from pydantic import ValidationError
 from werkzeug.security import check_password_hash
+from werkzeug.utils import secure_filename
 from models import UserORM, TaskORM, TaskStatus
 from schemas import UserRegistration, UserUpdate
 from database import SessionLocal
@@ -11,20 +12,53 @@ from sqlalchemy import or_
 from collections import defaultdict
 import os
 
-
 def create_app():
+    UPLOAD_FOLDER = 'flask_server/static/uploads/avatars'
+    ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+
     app = Flask(__name__, static_folder='static')
     app.secret_key = os.getenv('FLASK_SECRET_KEY')
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    @app.route('/logout/')
-    def logout():
-        session.clear()
-        return redirect(url_for('index'))
+    def save_avatar(user_id, file) -> str | None:
+        if not file or file.filename == '':
+            return None
+
+        if not ('.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS):
+            return None
+
+        filename = secure_filename(file.filename)
+        ext = filename.rsplit('.', 1)[1].lower()
+        new_filename = f"{user_id}.{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+        file.save(filepath)
+
+        return f"/static/uploads/avatars/{new_filename}"
+
+    @app.route('/api/upload_avatar', methods=['POST'])
+    def upload_avatar():
+        if 'user_id' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        file = request.files.get('avatar')
+        avatar_url = save_avatar(session['user_id'], file)
+
+        if not avatar_url:
+            return jsonify({'error': 'Invalid file or no file'}), 400
+
+        with SessionLocal() as db:
+            user = db.query(UserORM).filter(UserORM.id == session['user_id']).first()
+
+            if user:
+                user.avatar = avatar_url
+                db.commit()
+                session['avatar'] = avatar_url
+
+        return jsonify({'avatar': avatar_url}), 200
 
     @app.route('/api/tasks', methods=['POST'])
     def create_task():
@@ -109,6 +143,15 @@ def create_app():
                 })
             return jsonify(result)
 
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+
+    @app.route('/logout/')
+    def logout():
+        session.clear()
+        return redirect(url_for('index'))
+
     @app.route('/main/', methods=['GET', 'POST'])
     def mainpage():
         return render_template('mainpage.html')
@@ -140,6 +183,11 @@ def create_app():
                         'password': request.form.get('password'),
                         'confirm_password': request.form.get('confirm_password')
                     }
+
+                    avatar_url = save_avatar(user.id, request.files.get('avatar'))
+                    if avatar_url:
+                        user.avatar = avatar_url
+                        session['avatar'] = avatar_url
 
                     if form_data['username'] != user.username:
                         existing = db.query(UserORM).filter(UserORM.username == form_data['username']).first()
@@ -216,7 +264,6 @@ def create_app():
 
     @app.route('/login/', methods=['GET', 'POST'])
     def login():
-
         if 'user_id' in session:
             return redirect(url_for('mainpage'))
 
@@ -267,6 +314,7 @@ def create_app():
 
             session['username'] = user.username
             session['user_id'] = user.id
+            session['avatar'] = user.avatar
 
             if remember:
                 session.permanent = True

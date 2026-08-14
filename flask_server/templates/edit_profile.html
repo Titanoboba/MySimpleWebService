@@ -1,100 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit profile</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-	<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-	<link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
-
 <body>
 
-		{% with messages = get_flashed_messages(with_categories=true) %}
-			{% if messages %}
-				{% for category, message in messages %}
-					<div class="alert alert-{{ category }}">{{ message }}</div>
-				{% endfor %}
-			{% endif %}
-		{% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-	<div class = "wrapper">
-		<form action="{{ url_for('profile', update='true') }}" method="post">
-<!--		<input type="hidden" name="update" value="true">-->
-		<h1>Edit profile for {{ session.username }} </h1>
+    <div class="wrapper">
+        <!-- ВАЖНО: добавлен enctype -->
+        <form action="{{ url_for('profile', update='true') }}" method="post" enctype="multipart/form-data">
+            <h1>Edit profile for {{ session.username }}</h1>
 
-		<div class = "input-group">
-			<p class = "input-box">
-				<input type="text" name="username" placeholder="Username" class="{{ 'input-error' if errors.get('username') else '' }}"
-			   value="{{ username or '' }}">
-			</p>
+            <!-- Username -->
+            <div class="input-group">
+                <label for="username" class="field-label">Username</label>
+                <p class="input-box">
+                    <input type="text" id="username" name="username" placeholder="Username"
+                           class="{{ 'input-error' if errors.get('username') else '' }}"
+                           value="{{ username or '' }}">
+                </p>
+                {% if errors.get('username') %}
+                    {% for error in errors['username'] %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
-			{% if errors.get('username') %}
-				{% for error in errors['username'] %}
-					<p class="field-error">{{ error }}</p>
-				{% endfor %}
-			{% endif %}
-		</div>
+            <!-- Previous password -->
+            <div class="input-group">
+                <label for="prev_password" class="field-label">Previous password</label>
+                <p class="input-box">
+                    <input type="password" id="prev_password" name="prev_password" placeholder="Previous password"
+                           class="{{ 'input-error' if errors.get('prev_password') else '' }}">
+                </p>
+                {% if errors.get('prev_password') %}
+                    {% for error in errors['prev_password'] %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
-		<div class = "input-group">
-			<p class = "input-box">
-				<input type="password" name="prev_password" placeholder="Previous password" class="{{ 'input-error' if errors.get('prev_password') else '' }}">
-			</p>
+            <!-- New password -->
+            <div class="input-group">
+                <label for="password" class="field-label">New password</label>
+                <p class="input-box">
+                    <input type="password" id="password" name="password" placeholder="New password"
+                           class="{{ 'input-error' if errors.get('password') else '' }}">
+                </p>
+                {% if errors.get('password') %}
+                    {% for error in errors['password'] %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
-			{% if errors.get('prev_password') %}
-				{% for error in errors['prev_password'] %}
-					<p class="field-error">{{ error }}</p>
-				{% endfor %}
-			{% endif %}
-		</div>
+            <!-- Confirm password -->
+            <div class="input-group">
+                <label for="confirm_password" class="field-label">Confirm password</label>
+                <p class="input-box">
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm password"
+                           class="{{ 'input-error' if errors.get('confirm_password') else '' }}">
+                </p>
+                {% if errors.get('confirm_password') %}
+                    {% for error in errors['confirm_password'] %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
-		<div class = "input-group">
-			<p class = "input-box">
-				<input type="password" name="password" placeholder="New password" class="{{ 'input-error' if errors.get('password') else '' }}">
-			</p>
+            <!-- Email -->
+            <div class="input-group">
+                <label for="email" class="field-label">Email</label>
+                <p class="input-box">
+                    <input type="text" id="email" name="email" placeholder="Email"
+                           class="{{ 'input-error' if errors.get('email') else '' }}"
+                           value="{{ email or '' }}">
+                </p>
+                {% if errors.get('email') %}
+                    {% for error in errors['email'] %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
-			{% if errors.get('password') %}
-				{% for error in errors['password'] %}
-					<p class="field-error">{{ error }}</p>
-				{% endfor %}
-			{% endif %}
-		</div>
+            <!-- Avatar (стилизованный) -->
+            <div class="input-group">
+                <label class="field-label">Change avatar</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="avatar" name="avatar" accept="image/*" class="file-input" hidden>
+                    <label for="avatar" class="file-input-label">
+                        <i class='bx bx-cloud-upload'></i> Choose image
+                    </label>
+                    <span class="file-name" id="file-name">No file chosen</span>
+                </div>
+            </div>
 
-		<div class = "input-group">
-			<p class = "input-box">
-				<input type="password" name="confirm_password" placeholder="Confirm password" class="{{ 'input-error' if errors.get('confirm_password') else '' }}">
-			</p>
+            <button type="submit" class="btn">Edit information</button>
+        </form>
+    </div>
 
-
-			{% if errors.get('confirm_password') %}
-				{% for error in errors['confirm_password'] %}
-					<p class="field-error">{{ error }}</p>
-				{% endfor %}
-			{% endif %}
-		</div>
-
-		<div class = "input-group">
-			<p class = "input-box">
-				<input type="text" name="email" placeholder="Email" class="{{ 'input-error' if errors.get('email') else '' }}"
-			   value="{{ email or '' }}">
-			</p>
-
-			{% if errors.get('email') %}
-				{% for error in errors['email'] %}
-					<p class="field-error">{{ error }}</p>
-				{% endfor %}
-			{% endif %}
-		</div>
-
-		<p>
-			<button type="submit" class = "btn">Edit information</button>
-		</p>
-		</form>
-	</div>
+    <!-- Скрипт для отображения имени выбранного файла -->
+    <script>
+        document.getElementById('avatar').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+            document.getElementById('file-name').textContent = fileName;
+        });
+    </script>
 
 </body>
-
 </html>

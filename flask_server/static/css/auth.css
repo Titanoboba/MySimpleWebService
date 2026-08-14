@@ -150,3 +150,54 @@ h3{
 .remember-forgot a:hover{
     text-decoration: underline;
 }
+
+.field-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+/* --- Стилизованный input file --- */
+.file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.file-input {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.file-input-label {
+    display: inline-block;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 40px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.file-input-label:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+.file-input-label i {
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.file-name {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    font-style: italic;
+}

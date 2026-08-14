@@ -5,67 +5,97 @@
     <title>Mainpage</title>
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/board.css') }}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
-
-    {% if session.username %}
-        <h1>Welcome, {{ session.username }}!</h1>
-        <p>You are logged in.</p>
-        <a href="{{ url_for('profile', edit='true') }}">Edit profile</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
-
-        <br>
-
-        <h1>My tasks</h1>
-
-        <!-- Форма создания задачи -->
-        <div class="create-task">
-            <input type="text" id="task-title" placeholder="Task name">
-            <button id="add-task-btn">Create</button>
+    <header class="navbar">
+        <div class="profile-section">
+            {% if session.username %}
+                <div class="profile-dropdown">
+                    <div class="profile-trigger" id="profileTrigger">
+                        {% if session.avatar %}
+                            <img src="{{ session.avatar }}" alt="avatar" class="avatar-img">
+                        {% else %}
+                            <i class='bx bx-user-circle' style="font-size: 32px; color: #fff;"></i>
+                        {% endif %}
+                        <span class="username">{{ session.username }}</span>
+                        <i class='bx bx-chevron-down' id="dropdownArrow"></i>
+                    </div>
+                    <ul class="dropdown-menu" id="dropdownMenu">
+                        <li><a href="{{ url_for('profile', edit='true') }}"><i class='bx bx-user'></i> Edit profile</a></li>
+                        <li><a href="{{ url_for('logout') }}"><i class='bx bx-log-out'></i> Logout</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <div class="auth-links">
+                    <a href="{{ url_for('login') }}">Login</a>
+                    <span class="divider">|</span>
+                    <a href="{{ url_for('register') }}">Register</a>
+                </div>
+            {% endif %}
         </div>
+    </header>
 
-        <!-- Доска с колонками -->
-        <div class="board">
-            <div class="column" data-status="todo">
-                <h2>Not solved</h2>
-                <div class="task-list" id="todo-list"></div>
+    <div class="container">
+        {% if session.username %}
+            <h1>My tasks</h1>
+
+            <div class="create-task">
+                <input type="text" id="task-title" placeholder="Task name">
+                <button id="add-task-btn">Create</button>
             </div>
-            <div class="column" data-status="in_progress">
-                <h2>In process</h2>
-                <div class="task-list" id="in-progress-list"></div>
+
+            <div class="board">
+                <div class="column" data-status="todo">
+                    <h2>Not solved</h2>
+                    <div class="task-list" id="todo-list"></div>
+                </div>
+                <div class="column" data-status="in_progress">
+                    <h2>In process</h2>
+                    <div class="task-list" id="in-progress-list"></div>
+                </div>
+                <div class="column" data-status="done">
+                    <h2>Done</h2>
+                    <div class="task-list" id="done-list"></div>
+                </div>
             </div>
-            <div class="column" data-status="done">
-                <h2>Done</h2>
-                <div class="task-list" id="done-list"></div>
-            </div>
-        </div>
 
-        <script src="{{ url_for('static', filename='js/board.js') }}"></script>
-    {% else %}
-        <h1>Welcome, guest!</h1>
-        <p>
-            Please <a href="{{ url_for('login') }}">login</a> or
-            <a href="{{ url_for('register') }}">register</a>.
-        </p>
+            <script src="{{ url_for('static', filename='js/board.js') }}"></script>
+        {% else %}
+            <h1>Welcome, guest!</h1>
+            <p>Please <a href="{{ url_for('login') }}">login</a> or <a href="{{ url_for('register') }}">register</a>.</p>
+            <img src="{{ url_for('static', filename='images/cat.jpg') }}" alt="cat picture" style="max-width: 400px;">
+        {% endif %}
+    </div>
 
-        <br>
-
-        <img src="{{ url_for('static', filename='images/cat.jpg') }}" alt="cat picture">
-    {% endif %}
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        <div class="flash_message">
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert-{{ category }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
-        </div>
-    {% endwith %}
+        {% endwith %}
+    </div>
 
-    <br>
-
-    <a href="/">Go back</a>
-
+    <script>
+        const trigger = document.getElementById('profileTrigger');
+        const menu = document.getElementById('dropdownMenu');
+        if (trigger && menu) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menu.classList.toggle('show');
+                const arrow = document.getElementById('dropdownArrow');
+                if (arrow) arrow.classList.toggle('rotated');
+            });
+            document.addEventListener('click', function(e) {
+                if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.remove('show');
+                    const arrow = document.getElementById('dropdownArrow');
+                    if (arrow) arrow.classList.remove('rotated');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

@@ -12,6 +12,7 @@ class UserORM(Base):
     email = Column(String(45), nullable=False, unique=True)
     birthday_date = Column(Date, nullable=False)
     password_hash = Column(String(128), nullable=False)
+    avatar = Column(String(255), nullable=True)
     tasks = relationship('TaskORM', back_populates="user", cascade="all, delete-orphan")
 
 class TaskStatus(enum.Enum):
